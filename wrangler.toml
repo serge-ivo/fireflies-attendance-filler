@@ -1,4 +1,4 @@
-name = "fireflies-attendance-webhook"
+name = "fireflies-attendance-filler"
 main = "src/worker.js"
 compatibility_date = "2024-11-12"
 
