@@ -4,7 +4,7 @@ export default {
     console.log("Method:", request.method);
     console.log("URL:", request.url);
     console.log("Headers:", Object.fromEntries(request.headers.entries()));
-    
+
     if (request.method !== "POST") {
       console.log("Non-POST request, returning OK");
       return new Response("OK", { status: 200 });
@@ -14,7 +14,7 @@ export default {
     const webhookSecret = request.headers.get("x-fireflies-secret");
     console.log("Received secret:", webhookSecret ? "***" : "none");
     console.log("Expected secret:", env.WEBHOOK_SECRET ? "***" : "none");
-    
+
     if (webhookSecret !== env.WEBHOOK_SECRET) {
       console.log("Secret validation failed");
       return new Response("Unauthorized", { status: 401 });
@@ -70,9 +70,9 @@ export default {
       duration: t.duration_seconds,
       participants: t.participants,
       speakers: t.speakers,
-      analytics: t.analytics
+      analytics: t.analytics,
     });
-    
+
     // Useful fields (null-safe)
     const title = t.title || "";
     const dateISO = t.date || ""; // ISO string
@@ -81,7 +81,7 @@ export default {
     const participants = Array.isArray(t.participants) ? t.participants : []; // often emails
     const speakers = t.speakers || []; // [{id, name}]
     const speakerAnalytics = t.analytics?.speakers || []; // per-speaker metrics (talk time, words, questions, etc.)
-    
+
     console.log("Extracted data:", {
       title,
       dateISO,
@@ -89,7 +89,7 @@ export default {
       transcriptUrl,
       participantsCount: participants.length,
       speakersCount: speakers.length,
-      analyticsCount: speakerAnalytics.length
+      analyticsCount: speakerAnalytics.length,
     });
 
     // Derive attendance per "person". Prefer analytics by speaker name or email; fall back to participants list.
@@ -99,9 +99,9 @@ export default {
     console.log("Determining attendance with thresholds:", {
       WORDS_MIN: Number(env.ACTIVE_WORDS_MIN || 20),
       DURATION_MIN_SEC: Number(env.ACTIVE_DURATION_MIN_SEC || 60),
-      QUESTIONS_MIN: Number(env.ACTIVE_QUESTIONS_MIN || 1)
+      QUESTIONS_MIN: Number(env.ACTIVE_QUESTIONS_MIN || 1),
     });
-    
+
     const byPerson = determineAttendance({
       speakers,
       speakerAnalytics,
@@ -112,18 +112,18 @@ export default {
         QUESTIONS_MIN: Number(env.ACTIVE_QUESTIONS_MIN || 1), // asked >= 1 question
       },
     });
-    
+
     console.log("Attendance results:", byPerson);
 
     // Prepare Google Sheets insert
     const whenISO = new Date().toISOString();
     const meetingID = transcriptId;
-    
+
     console.log("Preparing Google Sheets data:", {
       whenISO,
       meetingID,
       sheetId: env.SHEET_ID,
-      tab: env.SHEET_TAB || "Attendance"
+      tab: env.SHEET_TAB || "Attendance",
     });
 
     const values = byPerson.map((p) => [
@@ -138,7 +138,7 @@ export default {
       durationSec ?? "",
       transcriptUrl,
     ]);
-    
+
     console.log("Values to insert:", values);
 
     if (values.length) {
