@@ -64,12 +64,6 @@ export default {
     const whenISO = new Date().toISOString();
     const meetingID = transcriptId;
 
-    const jwtAccessToken = await googleServiceAccountToken({
-      clientEmail: env.GOOGLE_CLIENT_EMAIL,
-      privateKey: env.GOOGLE_PRIVATE_KEY,
-      scope: "https://www.googleapis.com/auth/spreadsheets",
-    });
-
     const values = byPerson.map((p) => [
       whenISO,
       meetingID,
@@ -85,7 +79,7 @@ export default {
 
     if (values.length) {
       await appendToSheet({
-        accessToken: jwtAccessToken,
+        apiKey: env.GOOGLE_API_KEY,
         spreadsheetId: env.SHEET_ID,
         rangeA1: `${env.SHEET_TAB || "Attendance"}!A:J`,
         values,
@@ -243,18 +237,17 @@ function scoreActive(rec, th) {
   };
 }
 
-/* ---------------- Google Sheets helpers (Service Account JWT) ---------------- */
+/* ---------------- Google Sheets helpers (API Key) ---------------- */
 
-async function appendToSheet({ accessToken, spreadsheetId, rangeA1, values }) {
+async function appendToSheet({ apiKey, spreadsheetId, rangeA1, values }) {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(
     spreadsheetId
   )}/values/${encodeURIComponent(
     rangeA1
-  )}:append?valueInputOption=USER_ENTERED`;
+  )}:append?valueInputOption=USER_ENTERED&key=${apiKey}`;
   const res = await fetch(url, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${accessToken}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ values }),
@@ -265,72 +258,7 @@ async function appendToSheet({ accessToken, spreadsheetId, rangeA1, values }) {
   }
 }
 
-async function googleServiceAccountToken({ clientEmail, privateKey, scope }) {
-  const now = Math.floor(Date.now() / 1000);
-  const header = base64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
-  const claimSet = base64url(
-    JSON.stringify({
-      iss: clientEmail,
-      scope,
-      aud: "https://oauth2.googleapis.com/token",
-      exp: now + 3600,
-      iat: now,
-    })
-  );
-  const toSign = `${header}.${claimSet}`;
-  const signature = await signRS256(privateKey, toSign);
-  const jwt = `${toSign}.${signature}`;
-
-  const body = new URLSearchParams({
-    grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-    assertion: jwt,
-  });
-
-  const res = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
-  });
-  const data = await res.json();
-  if (!data.access_token)
-    throw new Error(`Token error: ${JSON.stringify(data)}`);
-  return data.access_token;
-}
-
-async function signRS256(pemPrivateKey, input) {
-  const pkcs8 = pemToArrayBuffer(pemPrivateKey);
-  const key = await crypto.subtle.importKey(
-    "pkcs8",
-    pkcs8,
-    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-  const sig = await crypto.subtle.sign(
-    "RSASSA-PKCS1-v1_5",
-    key,
-    new TextEncoder().encode(input)
-  );
-  return base64url(sig);
-}
-
 /* ---------------- utils ---------------- */
-
-function base64url(input) {
-  let bytes;
-  if (typeof input === "string") bytes = new TextEncoder().encode(input);
-  else bytes = new Uint8Array(input);
-  let str = btoa(String.fromCharCode(...bytes));
-  return str.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
-}
-
-function pemToArrayBuffer(pem) {
-  const b64 = pem.replace(/-----[^-]+-----/g, "").replace(/\s+/g, "");
-  const binStr = atob(b64);
-  const bytes = new Uint8Array(binStr.length);
-  for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
-  return bytes.buffer;
-}
 
 function json(obj) {
   return new Response(JSON.stringify(obj), {
