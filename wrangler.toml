@@ -14,3 +14,4 @@ ACTIVE_QUESTIONS_MIN = "1"
 # Secrets (set with wrangler secret put ...)
 # FIREFLIES_API_KEY
 # GOOGLE_API_KEY
+# WEBHOOK_SECRET

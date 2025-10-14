@@ -2,6 +2,12 @@ export default {
   async fetch(request, env) {
     if (request.method !== "POST") return new Response("OK", { status: 200 });
 
+    // Validate webhook secret
+    const webhookSecret = request.headers.get("x-fireflies-secret");
+    if (webhookSecret !== env.WEBHOOK_SECRET) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
     // Read body (Fireflies sends JSON)
     let payload;
     try {
