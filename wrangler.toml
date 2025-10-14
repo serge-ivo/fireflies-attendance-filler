@@ -1,0 +1,17 @@
+name = "fireflies-attendance-webhook"
+main = "src/worker.js"
+compatibility_date = "2024-11-12"
+
+[vars]
+SHEET_ID = "YOUR_SHEET_ID"
+SHEET_TAB = "Attendance"
+
+# Activeness thresholds (tweak without redeploy)
+ACTIVE_WORDS_MIN = "30"
+ACTIVE_DURATION_MIN_SEC = "90"
+ACTIVE_QUESTIONS_MIN = "1"
+
+# Secrets (set with wrangler secret put ...)
+# FIREFLIES_API_KEY
+# GOOGLE_CLIENT_EMAIL
+# GOOGLE_PRIVATE_KEY

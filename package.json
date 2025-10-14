@@ -1,0 +1,25 @@
+{
+  "name": "fireflies-attendance-filler",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker that processes Fireflies.ai webhooks and tracks meeting attendance in Google Sheets",
+  "main": "src/worker.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "secret:fireflies": "wrangler secret put FIREFLIES_API_KEY",
+    "secret:google-email": "wrangler secret put GOOGLE_CLIENT_EMAIL",
+    "secret:google-key": "wrangler secret put GOOGLE_PRIVATE_KEY"
+  },
+  "keywords": [
+    "fireflies",
+    "attendance",
+    "google-sheets",
+    "cloudflare-workers",
+    "webhook"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}
