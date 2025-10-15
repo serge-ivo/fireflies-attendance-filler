@@ -11,6 +11,16 @@ ACTIVE_WORDS_MIN = "30"
 ACTIVE_DURATION_MIN_SEC = "90"
 ACTIVE_QUESTIONS_MIN = "1"
 
+# Observability settings for logging
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+invocation_logs = true
+
 # Secrets (set with wrangler secret put ...)
 # FIREFLIES_API_KEY
 # GOOGLE_API_KEY
